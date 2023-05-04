@@ -1,37 +1,17 @@
 import requests
 import time
 import os
-import smtplib
 
 FB_API_URL = 'https://graph.facebook.com/v12.0/'
 USER_ID = '<enter user id here>'
 ACCESS_TOKEN = '<enter access token here>'
 MONITOR_INTERVAL = 60  # seconds
 
-# email settings
 def send_notification(message):
     """
-    Send a notification via email using Gmail.
+    Print the message to the console as a notification
     """
-    sender_email = "your_gmail_address@gmail.com"
-    sender_password = "your_gmail_password"
-    recipient_email = "recipient_email_address"
-
-    try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, sender_password)
-
-            subject = "Facebook profile update"
-            body = message
-
-            msg = f'Subject: {subject}\n\n{body}'
-            smtp.sendmail(sender_email, recipient_email, msg)
-            
-        print("Notification sent successfully.")
-    except Exception as e:
-        print(f"Error sending notification: {e}")
-
-
+    print(message)
 
 def monitor_user_profile():
     """
@@ -49,24 +29,24 @@ def monitor_user_profile():
             data = response.json()
             updated_time_str = data['updated_time']
             updated_time = time.strptime(updated_time_str, '%Y-%m-%dT%H:%M:%S+0000')
-            
+
             if last_updated_time is None or updated_time > last_updated_time:
                 message = f'The user updated their profile at {updated_time_str}'
                 send_notification(message)
                 last_updated_time = updated_time
-            
+
             # check for new post
             post_url = f'{FB_API_URL}{USER_ID}/feed?access_token={ACCESS_TOKEN}'
             post_response = requests.get(post_url)
             post_response.raise_for_status()
             post_data = post_response.json()
             new_post_time = time.strptime(post_data['data'][0]['created_time'], '%Y-%m-%dT%H:%M:%S+0000')
-            
+
             if last_post_time is None or new_post_time > last_post_time:
                 message = f'The user posted something new at {post_data["data"][0]["created_time"]}'
                 send_notification(message)
                 last_post_time = new_post_time
-                
+
         except requests.exceptions.HTTPError as e:
             print(f'Error monitoring user profile: {e}')
 
