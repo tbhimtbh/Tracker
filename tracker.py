@@ -1,10 +1,10 @@
+import argparse
 import requests
 import time
-import os
 
-FB_API_URL = 'https://graph.facebook.com/v12.0/'
-USER_ID = '<enter user id here>'
-ACCESS_TOKEN = '<enter access token here>'
+FB_API_URL = 'https://graph.facebook.com/v16.0/'
+USER_ID = ''
+ACCESS_TOKEN = ''
 MONITOR_INTERVAL = 60  # seconds
 
 def send_notification(message):
@@ -13,10 +13,35 @@ def send_notification(message):
     """
     print(message)
 
+def get_user_input():
+    """
+    Prompt the user to enter the USER_ID and ACCESS_TOKEN
+    """
+    global USER_ID, ACCESS_TOKEN
+
+    while not USER_ID:
+        USER_ID = input('Enter the USER_ID you want to track: ')
+
+    while not ACCESS_TOKEN:
+        ACCESS_TOKEN = input('Enter your ACCESS_TOKEN: ')
+
+    # validate USER_ID and ACCESS_TOKEN
+    user_url = f'{FB_API_URL}{USER_ID}?access_token={ACCESS_TOKEN}'
+    try:
+        response = requests.get(user_url)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f'Error validating USER_ID and ACCESS_TOKEN: {e}')
+        USER_ID = ''
+        ACCESS_TOKEN = ''
+        get_user_input()
+
 def monitor_user_profile():
     """
     Monitor the user's Facebook profile for updates and send a notification when a new update is detected.
     """
+    global USER_ID, ACCESS_TOKEN
+
     url = f'{FB_API_URL}{USER_ID}?fields=updated_time&access_token={ACCESS_TOKEN}'
     last_updated_time = None
     last_post_time = None
@@ -48,9 +73,25 @@ def monitor_user_profile():
                 last_post_time = new_post_time
 
         except requests.exceptions.HTTPError as e:
-            print(f'Error monitoring user profile: {e}')
+            if e.response.status_code == 190:
+                print('Invalid USER_ID or ACCESS_TOKEN. Please enter valid inputs.')
+                USER_ID = ''
+                ACCESS_TOKEN = ''
+                get_user_input()
+            else:
+                print(f'Error monitoring user profile: {e}')
 
         time.sleep(MONITOR_INTERVAL)
 
 if __name__ == '__main__':
-    monitor_user_profile()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-kill', action='store_true', help='Kill the monitoring process')
+    args = parser.parse_args()
+
+    if args.kill:
+        # Kill the monitoring process
+        pid = os.getpid()
+        os.system(f'kill {pid}')
+    else:
+        get_user_input()
+        monitor_user_profile()
