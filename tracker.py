@@ -2,7 +2,6 @@ import requests
 import time
 import os
 import smtplib
-from email.mime.text import MIMEText
 
 FB_API_URL = 'https://graph.facebook.com/v12.0/'
 USER_ID = '<enter user id here>'
@@ -10,8 +9,6 @@ ACCESS_TOKEN = '<enter access token here>'
 MONITOR_INTERVAL = 60  # seconds
 
 # email settings
-import smtplib
-
 def send_notification(message):
     """
     Send a notification via email using Gmail.
@@ -55,7 +52,7 @@ def monitor_user_profile():
             
             if last_updated_time is None or updated_time > last_updated_time:
                 message = f'The user updated their profile at {updated_time_str}'
-                send_email('Facebook Profile Update', message)
+                send_notification(message)
                 last_updated_time = updated_time
             
             # check for new post
@@ -67,14 +64,13 @@ def monitor_user_profile():
             
             if last_post_time is None or new_post_time > last_post_time:
                 message = f'The user posted something new at {post_data["data"][0]["created_time"]}'
-                send_email('New Facebook Post', message)
+                send_notification(message)
                 last_post_time = new_post_time
                 
         except requests.exceptions.HTTPError as e:
             print(f'Error monitoring user profile: {e}')
 
         time.sleep(MONITOR_INTERVAL)
-
 
 if __name__ == '__main__':
     monitor_user_profile()
