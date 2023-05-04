@@ -1,7 +1,5 @@
 Open the terminal and navigate to the directory where the Python script is located.
 
-Make sure you have the required dependencies installed by running the command pip install -r requirements.txt.
-
 Enter the command python3 tracker.py to run the script.
 
 The script will continue to run in the terminal until it is terminated manually or encounters an error.
