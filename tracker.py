@@ -14,6 +14,7 @@ def scrape_page():
     return latest_post
 
 while True:
+    print("Scraping...")
     latest_post = scrape_page()
     time.sleep(5) # Wait 5 seconds before scraping again
     new_post = scrape_page()
