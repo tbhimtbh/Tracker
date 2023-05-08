@@ -11,10 +11,12 @@ def scrape_page():
     response = requests.get(url)
     # Parse the HTML using BeautifulSoup
     soup = BeautifulSoup(response.text, "html.parser")
-    # Check if the HTML has changed since the last time we scraped the page
-    if soup.prettify() != latest_html:
+    # Find the ProfileTimeline div
+    timeline = soup.find("div", {"data-pagelet": "ProfileTimeline"})
+    # Check if the HTML of the ProfileTimeline div has changed since the last time we scraped the page
+    if timeline and timeline.prettify() != latest_html:
         # Update the latest_html variable with the new HTML
-        latest_html = soup.prettify()
+        latest_html = timeline.prettify()
         # Return True to indicate that there is a change
         return True
     # If the HTML has not changed, return False
