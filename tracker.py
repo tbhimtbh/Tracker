@@ -1,41 +1,21 @@
 import requests
+from bs4 import BeautifulSoup
 import time
 
-# prompt user for Facebook ID
-user_id = input("Enter Facebook ID: ")
+url = "https://www.facebook.com/profile.php?id=100090350417345"
 
-# create URL with the user ID
-url = f"https://www.facebook.com/{user_id}/"
-
-# initialize empty set to store previous posts
-prev_posts = set()
+def scrape_page():
+    # Make a GET request to the page
+    response = requests.get(url)
+    # Parse the HTML using BeautifulSoup
+    soup = BeautifulSoup(response.text, "html.parser")
+    # Find the latest post
+    latest_post = soup.find("div", {"class": "_1dwg _1w_m _q7o"})
+    return latest_post
 
 while True:
-    # send GET request to the URL
-    response = requests.get(url)
-
-    # check if response is successful
-    if response.status_code == 200:
-        # extract all post elements from the response
-        posts = response.text.split('<div class="_5pcb _4b0l _2q8l">')[1:]
-
-        # create a set of new posts
-        new_posts = set(posts) - prev_posts
-
-        # check if there are any new posts
-        if new_posts:
-            # display alert message in console
-            print("New post detected!")
-            print(f"Number of new posts: {len(new_posts)}")
-
-            # update the previous posts set
-            prev_posts.update(new_posts)
-        else:
-            # display message if no new posts
-            print("No new changes, continuing scrape")
-    else:
-        # display error message if request is unsuccessful
-        print(f"Error: {response.status_code}")
-
-    # wait for 5 seconds before scraping again
-    time.sleep(5)
+    latest_post = scrape_page()
+    time.sleep(5) # Wait 5 seconds before scraping again
+    new_post = scrape_page()
+    if latest_post != new_post:
+        print("New post alert!")
