@@ -1,32 +1,41 @@
 import requests
-import hashlib
 import time
 
-# Prompt user for Facebook profile ID
-profile_id = input("Enter the Facebook profile ID to monitor: ")
+# prompt user for Facebook ID
+user_id = input("Enter Facebook ID: ")
 
-# Construct the URL to monitor
-url = f"https://www.facebook.com/profile.php?id={profile_id}"
+# create URL with the user ID
+url = f"https://www.facebook.com/{user_id}/"
 
-# Use a hash of the page content to detect changes
-hash_old = ""
+# initialize empty set to store previous posts
+prev_posts = set()
 
-# Continuously scrape the page
 while True:
-    # Make a request to the URL
+    # send GET request to the URL
     response = requests.get(url)
 
-    # Compute the hash of the response content
-    hash_new = hashlib.sha256(response.content).hexdigest()
+    # check if response is successful
+    if response.status_code == 200:
+        # extract all post elements from the response
+        posts = response.text.split('<div class="_5pcb _4b0l _2q8l">')[1:]
 
-    # If the hash has changed, alert the user
-    if hash_new != hash_old:
-        print("ALERT: The page has changed!")
-        hash_old = hash_new
+        # create a set of new posts
+        new_posts = set(posts) - prev_posts
 
-    # If the hash has not changed, indicate that the program is still running
+        # check if there are any new posts
+        if new_posts:
+            # display alert message in console
+            print("New post detected!")
+            print(f"Number of new posts: {len(new_posts)}")
+
+            # update the previous posts set
+            prev_posts.update(new_posts)
+        else:
+            # display message if no new posts
+            print("No new changes, continuing scrape")
     else:
-        print("Scraping... Tracking...")
-    
-    # Wait for 5 seconds before scraping again
+        # display error message if request is unsuccessful
+        print(f"Error: {response.status_code}")
+
+    # wait for 5 seconds before scraping again
     time.sleep(5)
