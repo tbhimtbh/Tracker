@@ -3,20 +3,31 @@ from bs4 import BeautifulSoup
 import time
 
 url = "https://www.facebook.com/profile.php?id=100090350417345"
+latest_html = None
 
 def scrape_page():
+    global latest_html
     # Make a GET request to the page
     response = requests.get(url)
     # Parse the HTML using BeautifulSoup
     soup = BeautifulSoup(response.text, "html.parser")
-    # Find the latest post
-    latest_post = soup.find("div", {"class": "_1dwg _1w_m _q7o"})
-    return latest_post
+    # Check if the HTML has changed since the last time we scraped the page
+    if soup.prettify() != latest_html:
+        # Update the latest_html variable with the new HTML
+        latest_html = soup.prettify()
+        # Return True to indicate that there is a change
+        return True
+    # If the HTML has not changed, return False
+    return False
 
 while True:
+    # Scrape the page
+    if scrape_page():
+        # If there is a change, print an alert and the new HTML
+        print("Profile has been updated!")
+        # Wait for 1 second before sending the console message to avoid it being missed
+        time.sleep(1)
+    # Print a message to show that the program is still scraping every 5 seconds
     print("Scraping...")
-    latest_post = scrape_page()
-    time.sleep(5) # Wait 5 seconds before scraping again
-    new_post = scrape_page()
-    if latest_post != new_post:
-        print("New post alert!")
+    # Wait 5 seconds before scraping again
+    time.sleep(5)
